@@ -1,7 +1,8 @@
-const path = require('path');
-const webpack = require('webpack');
-const HtmlWebPackPlugin = require('html-webpack-plugin');
-const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
+import path from 'path';
+import webpack from 'webpack';
+import HtmlWebPackPlugin from 'html-webpack-plugin';
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -47,13 +48,55 @@ module.exports = {
         },
       },
       {
-        test: /\.(s(a|c)ss)$/,
-        use: ['style-loader', 'css-loader', 'sass-loader'],
+        test: /\.s?[ac]ss$/i,
+        use: [
+          isDevelopment
+            ? 'style-loader'
+            : {
+                // save the css to external file
+                loader: MiniCssExtractPlugin.loader,
+                options: {
+                  esModule: false,
+                },
+              },
+          {
+            // https://www.npmjs.com/package/css-loader
+            loader: 'css-loader',
+            options: {
+              esModule: false,
+              importLoaders: 2, // 2 other loaders used first, postcss-loader
+              sourceMap: isDevelopment,
+            },
+          },
+          {
+            // process tailwind stuff
+            // https://webpack.js.org/loaders/postcss-loader/
+            loader: 'postcss-loader',
+            options: {
+              sourceMap: isDevelopment,
+              postcssOptions: {
+                plugins: [
+                  require('@tailwindcss/postcss'),
+                  // add addtional postcss plugins here
+                  // easily find plugins at https://www.postcss.parts/
+                ],
+              },
+            },
+          },
+        ],
       },
       {
         test: /\.html$/i,
         loader: 'html-loader',
         options: {
+          esModule: false,
+        },
+      },
+      {
+        test: /\.(ico)$/,
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
           esModule: false,
         },
       },
